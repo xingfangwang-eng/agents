@@ -1,1 +1,12 @@
-{}
+{
+  "/api/paypal/webhook/route": "app/api/paypal/webhook/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/search/route": "app/api/search/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/best-agentic-ai-for-[slug]/page": "app/best-agentic-ai-for-[slug]/page.js",
+  "/directory/page": "app/directory/page.js",
+  "/page": "app/page.js",
+  "/login/page": "app/login/page.js",
+  "/payment/page": "app/payment/page.js",
+  "/tool/[slug]/page": "app/tool/[slug]/page.js"
+}
