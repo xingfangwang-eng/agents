@@ -1,0 +1,13 @@
+[api]
+enabled = true
+enable_db_auth = true
+enable_https_endpoint = true
+port = 54321
+
+[db]
+enabled = true
+db_schema = "public"
+enable_pgvector = true
+
+[auth]
+enabled = true
