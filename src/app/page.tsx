@@ -57,59 +57,93 @@ const HomePage = () => {
         </div>
       </section>
 
-      <Script id="search-script">
-        {`
-          document.getElementById('search-button')?.addEventListener('click', async () => {
-            const input = document.getElementById('search-input');
-            const query = input.value.trim();
-            
-            if (!query) return;
-            
-            const resultsSection = document.getElementById('search-results');
-            const resultsContainer = document.getElementById('results-container');
-            
-            if (resultsSection && resultsContainer) {
-              resultsSection.classList.remove('hidden');
-              resultsContainer.innerHTML = '<div class="col-span-full text-center py-8">Loading...</div>';
+      <Script id="search-script" strategy="afterInteractive">
+        {
+          `
+            document.getElementById('search-button')?.addEventListener('click', async function() {
+              const input = document.getElementById('search-input');
+              if (!input) return;
+              const query = input.value.trim();
+              const searchButton = document.getElementById('search-button');
               
-              try {
-                const response = await fetch('/api/search', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ query }),
-                });
+              if (!query) return;
+              
+              const resultsSection = document.getElementById('search-results');
+              const resultsContainer = document.getElementById('results-container');
+              
+              if (resultsSection && resultsContainer && searchButton) {
+                // Show loading state
+                const originalButtonText = searchButton.textContent;
+                searchButton.textContent = 'Searching...';
+                searchButton.disabled = true;
                 
-                const data = await response.json();
+                resultsSection.classList.remove('hidden');
+                resultsContainer.innerHTML = '<div class="col-span-full text-center py-8">Searching for tools...</div>';
                 
-                if (data.tools && data.tools.length > 0) {
-                  let html = '';
-                  data.tools.forEach(tool => {
-                    html += '<a href="/tool/' + tool.slug + '" class="border border-border rounded-lg p-6 hover:shadow-md transition-shadow">';
-                    html += '<div class="flex justify-between items-start mb-4">';
-                    html += '<h3 class="text-xl font-semibold">' + tool.name + '</h3>';
-                    if (tool.is_featured) {
-                      html += '<span class="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">Featured</span>';
-                    }
-                    html += '</div>';
-                    html += '<p class="text-muted-foreground mb-4 line-clamp-3">' + tool.description + '</p>';
-                    html += '<div class="flex justify-between items-center">';
-                    html += '<span class="font-medium">' + tool.pricing + '</span>';
-                    html += '<span class="text-sm text-muted-foreground">' + tool.category + '</span>';
-                    html += '</div>';
-                    html += '</a>';
+                try {
+                  const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query }),
                   });
-                  resultsContainer.innerHTML = html;
-                } else {
-                  resultsContainer.innerHTML = '<div class="col-span-full text-center py-8">No results found</div>';
+                  
+                  const data = await response.json();
+                  
+                  if (data.tools && data.tools.length > 0) {
+                    let html = '';
+                    data.tools.forEach(tool => {
+                      html += '<a href="/tool/' + tool.slug + '" class="border border-border rounded-lg p-6 hover:shadow-md transition-shadow">';
+                      html += '<div class="flex justify-between items-start mb-4">';
+                      html += '<h3 class="text-xl font-semibold">' + tool.name + '</h3>';
+                      if (tool.is_featured) {
+                        html += '<span class="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">Featured</span>';
+                      }
+                      html += '</div>';
+                      html += '<p class="text-muted-foreground mb-4 line-clamp-3">' + tool.description + '</p>';
+                      html += '<div class="flex justify-between items-center">';
+                      html += '<span class="font-medium">' + tool.pricing + '</span>';
+                      html += '<span class="text-sm text-muted-foreground">' + tool.category + '</span>';
+                      html += '</div>';
+                      html += '</a>';
+                    });
+                    resultsContainer.innerHTML = html;
+                  } else {
+                    // Improved no results message with suggestions
+                    resultsContainer.innerHTML = '<div class="col-span-full text-center py-8">' +
+                      '<h3 class="text-xl font-semibold mb-2">No results found</h3>' +
+                      '<p class="text-muted-foreground mb-6">Try searching for:</p>' +
+                      '<div class="flex flex-wrap justify-center gap-2" id="suggestions-container"></div>' +
+                      '</div>';
+                    
+                    // Add suggestion buttons with event listeners
+                    const suggestions = ['content', 'marketing', 'research', 'sales'];
+                    const container = document.getElementById('suggestions-container');
+                    if (container) {
+                      suggestions.forEach(term => {
+                        const button = document.createElement('button');
+                        button.className = 'px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors';
+                        button.textContent = term;
+                        button.addEventListener('click', function() {
+                          input.value = term;
+                          searchButton.click();
+                        });
+                        container.appendChild(button);
+                      });
+                    }
+                  }
+                } catch (error) {
+                  resultsContainer.innerHTML = '<div class="col-span-full text-center py-8">Error searching tools. Please try again later.</div>';
+                } finally {
+                  // Restore button state
+                  searchButton.textContent = originalButtonText;
+                  searchButton.disabled = false;
                 }
-              } catch (error) {
-                resultsContainer.innerHTML = '<div class="col-span-full text-center py-8">Error searching tools</div>';
               }
-            }
-          });
-        `}
+            });
+          `
+        }
       </Script>
 
       {/* Featured Tools */}
